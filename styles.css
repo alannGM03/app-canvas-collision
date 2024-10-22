@@ -1,17 +1,10 @@
-/* El body ocupa toda la pantalla y centra el canvas */
 body {
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background-color: #f0f0f0;
-    overflow: hidden; /* Evitar el scroll */
-}
-
-/* El canvas se ajusta a la ventana */
-canvas {
-    display: block;
-    border: 2px solid #000;
-    background-color: #ff8;
-}
-
+    background-color: #333333;
+    }
+    canvas {
+    border: 2px solid #ffffff;
+    }
