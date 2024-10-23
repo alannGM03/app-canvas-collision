@@ -17,10 +17,10 @@ class Circle {
     this.originalColor = color;  // Guardar el color original
     this.text = text;
     this.speed = speed;
-    this.dx = 1 * this.speed;
-    this.dy = 1 * this.speed;
-    this.colorChanged = false; // Para saber si el color ha cambiado
-    this.changeColorTimer = 0; // Controlar el tiempo del cambio de color
+    this.dx = Math.random() * 2 - 1;  // Movimiento lateral aleatorio
+    this.dy = -1 * this.speed;  // Movimiento hacia arriba inicialmente
+    this.colorChanged = false;
+    this.changeColorTimer = 0;
   }
 
   draw(context) {
@@ -38,12 +38,14 @@ class Circle {
 
   update(context) {
     this.draw(context);
+    
     // Actualizar la posición X
     this.posX += this.dx;
     // Cambiar la dirección si el círculo llega al borde del canvas en X
     if (this.posX + this.radius > window_width || this.posX - this.radius < 0) {
       this.dx = -this.dx;
     }
+    
     // Actualizar la posición Y
     this.posY += this.dy;
     // Cambiar la dirección si el círculo llega al borde del canvas en Y
@@ -60,66 +62,70 @@ class Circle {
     }
   }
 
-  // Método para cambiar temporalmente el color en colisión
   changeColor(newColor) {
     this.color = newColor;
-    this.colorChanged = true;  // Marcar que se ha cambiado el color
-    this.changeColorTimer = 10; // El color permanecerá durante 10 cuadros de animación
+    this.colorChanged = true;
+    this.changeColorTimer = 10;
   }
 
-  // Método para restaurar el color original
   restoreColor() {
     this.color = this.originalColor;
     this.colorChanged = false;
   }
 
-  // Método para invertir la dirección de movimiento en caso de colisión
   invertDirection() {
     this.dx = -this.dx;
     this.dy = -this.dy;
   }
+
+  isClicked(mouseX, mouseY) {
+    const distance = Math.sqrt((this.posX - mouseX) ** 2 + (this.posY - mouseY) ** 2);
+    return distance <= this.radius;
+  }
 }
 
-// Crear un array para almacenar N círculos
 let circles = [];
 
-// Función para generar círculos aleatorios
 function generateCircles(n) {
   for (let i = 0; i < n; i++) {
-    let radius = Math.random() * 30 + 20; // Radio entre 20 y 50
+    let radius = Math.random() * 30 + 20;
     let x = Math.random() * (window_width - radius * 2) + radius;
-    let y = Math.random() * (window_height - radius * 2) + radius;
-    let color = `#${Math.floor(Math.random()*16777215).toString(16)}`; // Color aleatorio
-    let speed = Math.random() * 4 + 1; // Velocidad entre 1 y 5
-    let text = `C${i + 1}`; // Etiqueta del círculo
+    let y = window_height - radius;  // Comienza justo antes del borde inferior
+    let color = `#${Math.floor(Math.random() * 16777215).toString(16)}`;
+    let speed = Math.random() * 4 + 1;
+    let text = `C${i + 1}`;
     circles.push(new Circle(x, y, radius, color, text, speed));
   }
 }
 
-// Función para detectar colisiones entre dos círculos
 function detectCollision(circle1, circle2) {
   let dx = circle2.posX - circle1.posX;
   let dy = circle2.posY - circle1.posY;
-  let distance = Math.sqrt(dx * dx + dy * dy); // Cálculo correcto de la distancia
-  return distance < (circle1.radius + circle2.radius); // Verifica si la distancia es menor que la suma de los radios
+  let distance = Math.sqrt(dx * dx + dy * dy);
+  return distance < (circle1.radius + circle2.radius);
 }
 
-// Función para manejar el rebote tras la colisión
 function handleCollision(circle1, circle2) {
-  // Invertir direcciones
   circle1.invertDirection();
   circle2.invertDirection();
 
-  // Cambiar colores temporalmente
-  circle1.changeColor("#0000FF"); // Cambiar a azul
+  circle1.changeColor("#0000FF");
   circle2.changeColor("#0000FF");
 }
 
-// Función para animar los círculos
+// Evento para eliminar un círculo con clic
+canvas.addEventListener("click", function (event) {
+  const rect = canvas.getBoundingClientRect();
+  const mouseX = event.clientX - rect.left;
+  const mouseY = event.clientY - rect.top;
+
+  // Buscar y eliminar el círculo que fue clicado
+  circles = circles.filter(circle => !circle.isClicked(mouseX, mouseY));
+});
+
 function animate() {
-  ctx.clearRect(0, 0, window_width, window_height); // Limpiar el canvas
-  
-  // Verificar colisiones entre todos los círculos
+  ctx.clearRect(0, 0, window_width, window_height);
+
   for (let i = 0; i < circles.length; i++) {
     for (let j = i + 1; j < circles.length; j++) {
       if (detectCollision(circles[i], circles[j])) {
@@ -128,14 +134,12 @@ function animate() {
     }
   }
 
-  // Actualizar la posición de cada círculo
   circles.forEach(circle => {
     circle.update(ctx);
   });
 
-  requestAnimationFrame(animate); // Repetir la animación
+  requestAnimationFrame(animate);
 }
 
-// Generar N círculos y comenzar la animación
-generateCircles(10); // Puedes cambiar el número de círculos aquí
+generateCircles(10);
 animate();
